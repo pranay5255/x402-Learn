@@ -1,9 +1,15 @@
 import { config } from "dotenv";
+import {
+  SYSTEM_PROMPT,
+  DEFAULT_USER_PROMPT,
+  MODEL_OVERRIDE,
+  GENERATION_SETTINGS,
+} from "./prompt{edit}";
 
 config();
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "openai/gpt-3.5-turbo";
+const OPENROUTER_MODEL = MODEL_OVERRIDE || process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 
 if (!OPENROUTER_API_KEY) {
   throw new Error("OPENROUTER_API_KEY environment variable is required");
@@ -34,12 +40,13 @@ interface GenerateTextResult {
 /**
  * Generate text using OpenRouter API
  *
- * @param prompt - The user's prompt
- * @param model - Optional model override (defaults to OPENROUTER_MODEL env var)
+ * @param prompt - The user's prompt (uses DEFAULT_USER_PROMPT if empty)
+ * @param model - Optional model override (defaults to OPENROUTER_MODEL)
  * @returns Promise with model, content, and raw response
  */
 export async function generateText(prompt: string, model?: string): Promise<GenerateTextResult> {
   const selectedModel = model || OPENROUTER_MODEL;
+  const userPrompt = prompt || DEFAULT_USER_PROMPT;
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -53,10 +60,16 @@ export async function generateText(prompt: string, model?: string): Promise<Gene
       model: selectedModel,
       messages: [
         {
+          role: "system",
+          content: SYSTEM_PROMPT,
+        },
+        {
           role: "user",
-          content: prompt,
+          content: userPrompt,
         },
       ],
+      temperature: GENERATION_SETTINGS.temperature,
+      max_tokens: GENERATION_SETTINGS.max_tokens,
     }),
   });
 
@@ -77,5 +90,20 @@ export async function generateText(prompt: string, model?: string): Promise<Gene
     model: data.model,
     content: data.choices[0].message.content,
     raw: data,
+  };
+}
+
+/**
+ * Get the current prompt configuration
+ * Useful for debugging and displaying current settings
+ *
+ * @returns Current prompt configuration object
+ */
+export function getPromptConfig() {
+  return {
+    systemPrompt: SYSTEM_PROMPT,
+    defaultUserPrompt: DEFAULT_USER_PROMPT,
+    model: OPENROUTER_MODEL,
+    settings: GENERATION_SETTINGS,
   };
 }

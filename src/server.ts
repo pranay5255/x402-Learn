@@ -4,7 +4,8 @@ import express from "express";
 import { paymentMiddleware } from "x402-express";
 // Import the facilitator from the x402 package to use the mainnet facilitator
 import { facilitator } from "@coinbase/x402";
-import { generateText } from "./openrouter";
+import { generateText, getPromptConfig } from "./openrouter";
+import { EXAMPLE_PROMPTS } from "./prompt{edit}";
 
 config();
 
@@ -19,6 +20,44 @@ if (!payToAddress || !process.env.CDP_API_KEY_ID || !process.env.CDP_API_KEY_SEC
 
 const app = express();
 app.use(express.json());
+
+// ============================================================================
+// FREE ENDPOINTS (no payment required)
+// ============================================================================
+
+// Health check endpoint
+app.get("/", (req, res) => {
+  res.json({
+    status: "online",
+    message: "x402 OpenRouter Server is running!",
+    endpoints: {
+      "/": "This info page (free)",
+      "/config": "View current prompt configuration (free)",
+      "POST /generate-text": "Generate AI text ($0.01 USDC on Base)",
+    },
+    examplePrompts: EXAMPLE_PROMPTS,
+  });
+});
+
+// Config endpoint - shows current prompt settings (useful for debugging)
+app.get("/config", (req, res) => {
+  const promptConfig = getPromptConfig();
+  res.json({
+    message: "Current prompt configuration (from src/prompt{edit}.ts)",
+    config: {
+      systemPrompt: promptConfig.systemPrompt,
+      defaultUserPrompt: promptConfig.defaultUserPrompt,
+      model: promptConfig.model,
+      temperature: promptConfig.settings.temperature,
+      maxTokens: promptConfig.settings.max_tokens,
+    },
+    editInstructions: "Edit src/prompt{edit}.ts on GitHub to customize these settings!",
+  });
+});
+
+// ============================================================================
+// PAID ENDPOINTS (require x402 payment)
+// ============================================================================
 
 // Configure payment middleware with price map
 app.use(
@@ -65,5 +104,20 @@ app.post("/generate-text", async (req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server listening at http://0.0.0.0:${PORT}`);
+  console.log(`
+╔═══════════════════════════════════════════════════════════════╗
+║           🚀 x402 OpenRouter Server Started!                  ║
+╠═══════════════════════════════════════════════════════════════╣
+║  Server URL: http://0.0.0.0:${PORT.toString().padEnd(35)}║
+║                                                               ║
+║  Free Endpoints:                                              ║
+║    GET  /         → Server info & example prompts             ║
+║    GET  /config   → View current prompt configuration         ║
+║                                                               ║
+║  Paid Endpoints ($0.01 USDC on Base):                         ║
+║    POST /generate-text → Generate AI text                     ║
+║                                                               ║
+║  💡 Edit src/prompt{edit}.ts on GitHub to customize prompts!  ║
+╚═══════════════════════════════════════════════════════════════╝
+  `);
 });
