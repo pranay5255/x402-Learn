@@ -33,14 +33,12 @@ interface GenerateTextResult {
 
 /**
  * Generate text using OpenRouter API
+ *
  * @param prompt - The user's prompt
  * @param model - Optional model override (defaults to OPENROUTER_MODEL env var)
  * @returns Promise with model, content, and raw response
  */
-export async function generateText(
-  prompt: string,
-  model?: string,
-): Promise<GenerateTextResult> {
+export async function generateText(prompt: string, model?: string): Promise<GenerateTextResult> {
   const selectedModel = model || OPENROUTER_MODEL;
 
   const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -81,4 +79,3 @@ export async function generateText(
     raw: data,
   };
 }
-

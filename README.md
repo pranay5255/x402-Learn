@@ -18,35 +18,68 @@ A starter template for building paid API endpoints using x402 payment middleware
 - OpenRouter API key (get one at [openrouter.ai](https://openrouter.ai))
 - ngrok CLI (for exposing your local server publicly - see [ngrok setup](#ngrok-setup) below)
 
-## Setup
+## Quickstart (local CLI)
+
+1. **Install tools:** Node.js 20+, pnpm 10+, ngrok.
+2. **Install deps:** `pnpm install`
+3. **Copy env:** `cp .env.example .env`
+4. **Fill `.env`:**
+
+   | Variable | Purpose |
+   | --- | --- |
+   | `ADDRESS` | Your Base wallet that receives USDC |
+   | `CDP_API_KEY_ID` / `CDP_API_KEY_SECRET` | Coinbase Developer Platform keys for x402 mainnet facilitator |
+   | `OPENROUTER_API_KEY` | API key from OpenRouter |
+   | `OPENROUTER_MODEL` | Optional default model (e.g. `openai/gpt-4o-mini`) |
+   | `PORT` | Optional port (default `4021`) |
+   | `OPENROUTER_HTTP_REFERER`, `OPENROUTER_X_TITLE` | Optional headers OpenRouter may require for your key |
+
+5. **Run dev server:** `pnpm dev` (listens on `http://0.0.0.0:4021`)
+6. **Expose publicly:** in a new terminal, run `pnpm ngrok` (or `ngrok http 4021`) and use the HTTPS URL it prints.
+7. **Send a paid request:** Using an x402-capable client, `POST /generate-text` to your ngrok URL with a $0.01 USDC-on-Base payment and JSON body like `{"prompt": "Hello!"}`.
+
+### What works today
+- x402 middleware enforces the price map: `POST /generate-text` costs `$0.01` on Base mainnet.
+- Payments route through the Coinbase facilitator from `@coinbase/x402` and settle to `ADDRESS`.
+- Successful payments trigger an OpenRouter chat completion and return `{ success, model, output }`.
+- OpenRouter calls use the chat completions API with the user prompt as a single message.
+
+### Known gaps / improvements to consider
+- No local “free” or sandbox mode; every call goes through x402 mainnet facilitator. Add a dev-only bypass or staging facilitator if you need test traffic without on-chain payment.
+- Request validation is minimal (only `prompt` existence); consider zod/TypeBox for shape, size limits, and clearer errors.
+- OpenRouter failures surface as 500s; map auth/model/rate-limit errors to friendlier messages and add retry/backoff if desired.
+- Logging/observability is minimal; add structured logs around payment state, facilitator responses, and OpenRouter latency for RCA.
+- CI/tests are absent; add a health check route, contract tests for the price map, and mocked OpenRouter calls for deterministic CI.
+
+## Detailed Setup
 
 1. **Clone and install dependencies:**
 
-```bash
-pnpm install
-```
+   ```bash
+   pnpm install
+   ```
 
 2. **Copy environment variables template:**
 
-```bash
-cp .env.example .env
-```
+   ```bash
+   cp .env.example .env
+   ```
 
 3. **Configure your `.env` file:**
 
-Edit `.env` and fill in the following required variables:
+   Edit `.env` and fill in the following required variables:
 
-- `ADDRESS`: Your Base wallet address (USDC receiver)
-- `CDP_API_KEY_ID`: Your Coinbase Developer Platform API key ID
-- `CDP_API_KEY_SECRET`: Your Coinbase Developer Platform API key secret
-- `OPENROUTER_API_KEY`: Your OpenRouter API key
+   - `ADDRESS`: Your Base wallet address (USDC receiver)
+   - `CDP_API_KEY_ID`: Your Coinbase Developer Platform API key ID
+   - `CDP_API_KEY_SECRET`: Your Coinbase Developer Platform API key secret
+   - `OPENROUTER_API_KEY`: Your OpenRouter API key
 
-Optional variables:
+   Optional variables:
 
-- `OPENROUTER_MODEL`: Default LLM model (defaults to `openai/gpt-3.5-turbo`)
-- `PORT`: Server port (defaults to `4021`)
-- `OPENROUTER_HTTP_REFERER`: HTTP Referer header for OpenRouter
-- `OPENROUTER_X_TITLE`: X-Title header for OpenRouter
+   - `OPENROUTER_MODEL`: Default LLM model (defaults to `openai/gpt-3.5-turbo`)
+   - `PORT`: Server port (defaults to `4021`)
+   - `OPENROUTER_HTTP_REFERER`: HTTP Referer header for OpenRouter
+   - `OPENROUTER_X_TITLE`: X-Title header for OpenRouter
 
 ## Development
 
@@ -143,6 +176,23 @@ Run the compiled server:
 ```bash
 pnpm start
 ```
+
+## GitHub-only editing & cloud run (no local IDE)
+
+1. Open the repo on GitHub and press `.` to launch the web editor.  
+2. Create `.env` in the root (use `.env.example` as a guide) and add your keys.  
+3. Commit changes to a branch.  
+4. From the repo page, click **Code → Codespaces → Create codespace** to get a browser-based VS Code + terminal.  
+5. In the codespace terminal run:
+   ```bash
+   pnpm install
+   pnpm dev
+   ```
+6. Start an ngrok tunnel inside the codespace: `ngrok http 4021` (install ngrok if prompted).  
+7. Use the public ngrok URL to send the paid `POST /generate-text` request.  
+8. Edit files in the web editor or Codespaces, commit, and push.
+
+Need a non-technical friendly walkthrough deck? See `docs/non-technical-walkthrough.md` and export it (print to PDF from GitHub, or run `npx -y md-to-pdf docs/non-technical-walkthrough.md` locally or in Codespaces).
 
 ## API Endpoints
 
