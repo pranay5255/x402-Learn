@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "es2015",
-    "moduleResolution": "bundler",
+    "module": "Node16",
+    "moduleResolution": "node16",
     "outDir": "./dist",
     "rootDir": "./src",
     "esModuleInterop": true,
@@ -12,7 +12,14 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "types": ["node"],
-    "allowImportingTsExtensions": false
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "sourceMap": true,
+    "removeComments": true,
+    // "emitDeclarationOnly": true,
+    // "noEmit": true
   },
   "include": ["src/**/*"],
   "exclude": ["dist", "node_modules"]
