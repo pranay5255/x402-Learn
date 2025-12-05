@@ -1,210 +1,221 @@
 # x402-openrouter-starter
 
-A starter template for building paid API endpoints using x402 payment middleware with OpenRouter AI integration. This project demonstrates how to accept USDC payments on Base mainnet using Coinbase's hosted x402 facilitator and integrate with OpenRouter for LLM completions.
+A beginner-friendly template for building paid AI API endpoints using x402 payment protocol. Accept USDC cryptocurrency payments on Base network and generate AI responses with OpenRouter.
 
-## Features
+**Perfect for both technical and non-technical users!**
 
-- **x402 Payment Integration**: Accept USDC payments on Base mainnet using Coinbase's hosted facilitator
-- **OpenRouter Integration**: Generate text completions using various LLM models via OpenRouter API
-- **Express Server**: Simple Express.js server with TypeScript support
-- **Type-Safe**: Full TypeScript support with proper type definitions
+---
 
-## Prerequisites
+## 🎯 What This Does
 
-- Node.js v20+ (install via [nvm](https://github.com/nvm-sh/nvm))
-- pnpm v10 (install via [pnpm.io/installation](https://pnpm.io/installation))
-- CDP API keys (access via [Coinbase Developer Platform](https://docs.cdp.coinbase.com/))
-- A valid Ethereum address for receiving payments (Base network)
-- OpenRouter API key (get one at [openrouter.ai](https://openrouter.ai))
-- ngrok CLI (for exposing your local server publicly - see [ngrok setup](#ngrok-setup) below)
+- Creates a paid AI API that charges **$0.01 USDC** per request
+- Payments are processed automatically via x402 protocol
+- You receive payments directly to your Base wallet
+- AI responses powered by your choice of models via OpenRouter
 
-## Quickstart (local CLI)
+---
 
-1. **Install tools:** Node.js 20+, pnpm 10+, ngrok.
-2. **Install deps:** `pnpm install`
-3. **Copy env:** `cp .env.example .env`
-4. **Fill `.env`:**
+## 📁 Understanding the Files
 
-   | Variable | Purpose |
-   | --- | --- |
-   | `ADDRESS` | Your Base wallet that receives USDC |
-   | `CDP_API_KEY_ID` / `CDP_API_KEY_SECRET` | Coinbase Developer Platform keys for x402 mainnet facilitator |
-   | `OPENROUTER_API_KEY` | API key from OpenRouter |
-   | `OPENROUTER_MODEL` | Optional default model (e.g. `openai/gpt-4o-mini`) |
-   | `PORT` | Optional port (default `4021`) |
-   | `OPENROUTER_HTTP_REFERER`, `OPENROUTER_X_TITLE` | Optional headers OpenRouter may require for your key |
+### ✏️ Files You EDIT on GitHub (can be committed)
 
-5. **Run dev server:** `pnpm dev` (listens on `http://0.0.0.0:4021`)
-6. **Expose publicly:** in a new terminal, run `pnpm ngrok` (or `ngrok http 4021`) and use the HTTPS URL it prints.
-7. **Send a paid request:** Using an x402-capable client, `POST /generate-text` to your ngrok URL with a $0.01 USDC-on-Base payment and JSON body like `{"prompt": "Hello!"}`.
+| File | Purpose |
+|------|---------|
+| `src/prompt{edit}.ts` | **Your main editing file!** Customize AI personality, prompts, and settings |
+| `README.md` | This documentation |
 
-### What works today
-- x402 middleware enforces the price map: `POST /generate-text` costs `$0.01` on Base mainnet.
-- Payments route through the Coinbase facilitator from `@coinbase/x402` and settle to `ADDRESS`.
-- Successful payments trigger an OpenRouter chat completion and return `{ success, model, output }`.
-- OpenRouter calls use the chat completions API with the user prompt as a single message.
+### 🔐 Files You CREATE LOCALLY (never commit!)
 
-### Known gaps / improvements to consider
-- No local “free” or sandbox mode; every call goes through x402 mainnet facilitator. Add a dev-only bypass or staging facilitator if you need test traffic without on-chain payment.
-- Request validation is minimal (only `prompt` existence); consider zod/TypeBox for shape, size limits, and clearer errors.
-- OpenRouter failures surface as 500s; map auth/model/rate-limit errors to friendlier messages and add retry/backoff if desired.
-- Logging/observability is minimal; add structured logs around payment state, facilitator responses, and OpenRouter latency for RCA.
-- CI/tests are absent; add a health check route, contract tests for the price map, and mocked OpenRouter calls for deterministic CI.
+| File | Purpose |
+|------|---------|
+| `.env` | Your secret API keys and wallet address |
 
-## Detailed Setup
+### 📦 Files You DON'T Touch
 
-1. **Clone and install dependencies:**
+| File | Purpose |
+|------|---------|
+| `src/server.ts` | Express server with x402 payment middleware |
+| `src/openrouter.ts` | OpenRouter API integration |
+| `package.json` | Project dependencies |
 
-   ```bash
-   pnpm install
-   ```
+---
 
-2. **Copy environment variables template:**
+## 🚀 Quick Setup (5 Steps)
 
-   ```bash
-   cp .env.example .env
-   ```
+### Step 1: Get Your API Keys
 
-3. **Configure your `.env` file:**
+Before you start, you'll need:
 
-   Edit `.env` and fill in the following required variables:
+1. **Base Wallet Address** - Your Ethereum address on Base network to receive USDC payments
+2. **CDP API Keys** - From [Coinbase Developer Platform](https://docs.cdp.coinbase.com/)
+3. **OpenRouter API Key** - From [openrouter.ai/keys](https://openrouter.ai/keys)
 
-   - `ADDRESS`: Your Base wallet address (USDC receiver)
-   - `CDP_API_KEY_ID`: Your Coinbase Developer Platform API key ID
-   - `CDP_API_KEY_SECRET`: Your Coinbase Developer Platform API key secret
-   - `OPENROUTER_API_KEY`: Your OpenRouter API key
-
-   Optional variables:
-
-   - `OPENROUTER_MODEL`: Default LLM model (defaults to `openai/gpt-3.5-turbo`)
-   - `PORT`: Server port (defaults to `4021`)
-   - `OPENROUTER_HTTP_REFERER`: HTTP Referer header for OpenRouter
-   - `OPENROUTER_X_TITLE`: X-Title header for OpenRouter
-
-## Development
-
-Run the development server with hot reload:
+### Step 2: Fork & Clone the Repository
 
 ```bash
+# Clone your fork
+git clone https://github.com/YOUR_USERNAME/x402-openrouter-starter.git
+cd x402-openrouter-starter
+```
+
+### Step 3: Create Your `.env` File (LOCAL ONLY - Never Commit!)
+
+```bash
+# Copy the example file
+cp .env.example .env
+```
+
+Edit `.env` and fill in your values:
+
+```env
+# REQUIRED - Your Base wallet address
+ADDRESS=0xYourWalletAddressHere
+
+# REQUIRED - CDP API keys
+CDP_API_KEY_ID=your_cdp_key_id
+CDP_API_KEY_SECRET=your_cdp_key_secret
+
+# REQUIRED - OpenRouter API key
+OPENROUTER_API_KEY=your_openrouter_key
+
+# OPTIONAL - Choose your AI model
+OPENROUTER_MODEL=openai/gpt-4o-mini
+```
+
+### Step 4: Install & Run
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start the server
 pnpm dev
 ```
 
-The server will start on `http://0.0.0.0:4021` (or your configured PORT).
-
-## ngrok Setup
-
-To expose your local server publicly so it can be accessed from anywhere on the internet, use ngrok.
-
-### Step 1: Install ngrok CLI
-
-**macOS (with Homebrew):**
-```bash
-brew install ngrok/ngrok/ngrok
+You should see:
+```
+╔═══════════════════════════════════════════════════════════════╗
+║           🚀 x402 OpenRouter Server Started!                  ║
+╚═══════════════════════════════════════════════════════════════╝
 ```
 
-**Linux/Windows:**
-Download the installer from [ngrok.com/download](https://ngrok.com/download)
+### Step 5: Expose with ngrok (to receive payments)
 
-### Step 2: Configure ngrok with your auth token
-
-1. Get your auth token from [ngrok dashboard](https://dashboard.ngrok.com/get-started/your-authtoken)
-2. Connect your ngrok CLI to your account:
+Open a new terminal:
 
 ```bash
-ngrok config add-authtoken YOUR_NGROK_AUTH_TOKEN
-```
+# If ngrok is installed
+ngrok http 4021
 
-### Step 3: Expose your server with ngrok
-
-**Option A: Using the npm script (recommended)**
-
-With your server running on port 4021, open a new terminal and run:
-
-```bash
+# Or use the script
 pnpm ngrok
 ```
 
-**Option B: Manual command**
+Copy your public URL (like `https://abc123.ngrok-free.app`)
+
+---
+
+## ✏️ Customizing Your AI (via GitHub UI)
+
+The magic file is **`src/prompt{edit}.ts`** - edit it directly on GitHub!
+
+### How to Edit on GitHub:
+
+1. Go to `src/prompt{edit}.ts` in your repo
+2. Click the **pencil icon** (✏️) to edit
+3. Modify the prompts
+4. Click **"Commit changes"**
+5. Restart your server to see changes
+
+### What You Can Customize:
+
+```typescript
+// 🤖 SYSTEM PROMPT - Your AI's personality
+export const SYSTEM_PROMPT = `You are a helpful, friendly AI assistant.
+You provide clear, concise, and accurate responses.`;
+
+// 💬 DEFAULT PROMPT - Fallback when no prompt given
+export const DEFAULT_USER_PROMPT = `Say hello!`;
+
+// 📝 EXAMPLE PROMPTS - Show users what to try
+export const EXAMPLE_PROMPTS = [
+  "Write a haiku about crypto",
+  "Explain blockchain simply",
+];
+
+// ⚙️ MODEL OVERRIDE - Use a specific model
+export const MODEL_OVERRIDE = ""; // or "anthropic/claude-3-haiku"
+
+// 🎯 GENERATION SETTINGS
+export const GENERATION_SETTINGS = {
+  temperature: 0.7,  // 0 = focused, 1 = creative
+  max_tokens: 1000,  // Response length limit
+};
+```
+
+---
+
+## 🧪 Testing Your API
+
+### Free Endpoints (no payment needed):
 
 ```bash
-ngrok http 4021
+# Check server status
+curl http://localhost:4021/
+
+# View current prompt configuration
+curl http://localhost:4021/config
 ```
 
-You'll see output like:
-
-```
-Forwarding    https://e4a1-12-34-56-78.ngrok-free.app -> http://localhost:4021
-```
-
-The important part is the public URL: `https://e4a1-12-34-56-78.ngrok-free.app`
-
-This URL is now reachable from anywhere on the internet and tunnels directly to your local Express server.
-
-### Step 4: Test your public API
-
-From any machine (including friends/teammates), they can test the public endpoint:
+### Paid Endpoint ($0.01 USDC):
 
 ```bash
-curl -X POST https://e4a1-12-34-56-78.ngrok-free.app/generate-text \
+# Requires x402-capable client with payment
+curl -X POST https://YOUR-NGROK-URL/generate-text \
   -H "Content-Type: application/json" \
-  -d '{"prompt": "Say hello from a paid AI server exposed with ngrok!"}'
+  -d '{"prompt": "Write a haiku about coding"}'
 ```
 
-Replace the URL with your ngrok URL.
+---
 
-**Expected behavior:**
-- x402 will enforce the pricing ($0.01 USDC on Base)
-- Once paid, the server calls OpenRouter
-- The user gets back a JSON response with the model output
+## 🌐 Browser-Only Setup (GitHub Codespaces)
 
-**Note:** The ngrok URL changes each time you restart ngrok (unless you have a paid plan with a static domain).
+No local IDE? No problem!
 
-## Building
-
-Build the TypeScript project:
-
-```bash
-pnpm build
-```
-
-This compiles TypeScript files from `src/` to `dist/`.
-
-## Production
-
-Run the compiled server:
-
-```bash
-pnpm start
-```
-
-## GitHub-only editing & cloud run (no local IDE)
-
-1. Open the repo on GitHub and press `.` to launch the web editor.  
-2. Create `.env` in the root (use `.env.example` as a guide) and add your keys.  
-3. Commit changes to a branch.  
-4. From the repo page, click **Code → Codespaces → Create codespace** to get a browser-based VS Code + terminal.  
-5. In the codespace terminal run:
+1. **Open Web Editor**: Go to your repo, press `.` (period key)
+2. **Create Codespace**: Click `Code → Codespaces → Create codespace`
+3. **In Codespace Terminal**:
    ```bash
+   # Create .env file
+   cp .env.example .env
+   # Edit .env with your keys (use the editor)
+   
+   # Install and run
    pnpm install
    pnpm dev
    ```
-6. Start an ngrok tunnel inside the codespace: `ngrok http 4021` (install ngrok if prompted).  
-7. Use the public ngrok URL to send the paid `POST /generate-text` request.  
-8. Edit files in the web editor or Codespaces, commit, and push.
+4. **Start ngrok** in another terminal: `ngrok http 4021`
+5. **Edit prompts**: Modify `src/prompt{edit}.ts` and commit!
 
-Need a non-technical friendly walkthrough deck? See `docs/non-technical-walkthrough.md` and export it (print to PDF from GitHub, or run `npx -y md-to-pdf docs/non-technical-walkthrough.md` locally or in Codespaces).
+---
 
-## API Endpoints
+## 📊 API Reference
 
-### POST /generate-text
+### `GET /` - Server Info (Free)
 
-Generate text using OpenRouter's LLM models. This endpoint requires payment via x402.
+Returns server status and available endpoints.
 
-**Request Body:**
+### `GET /config` - View Configuration (Free)
+
+Returns current prompt settings from `src/prompt{edit}.ts`.
+
+### `POST /generate-text` - Generate AI Text ($0.01 USDC)
+
+**Request:**
 ```json
 {
-  "prompt": "Write a haiku about coding",
-  "model": "openai/gpt-4" // optional, defaults to OPENROUTER_MODEL
+  "prompt": "Your question or request",
+  "model": "openai/gpt-4o-mini"  // optional
 }
 ```
 
@@ -212,72 +223,61 @@ Generate text using OpenRouter's LLM models. This endpoint requires payment via 
 ```json
 {
   "success": true,
-  "model": "openai/gpt-4",
-  "output": "Code flows like water,\nLogic shapes the digital stream,\nBugs hide in the depths."
+  "model": "openai/gpt-4o-mini",
+  "output": "AI generated response..."
 }
 ```
 
-**Price:** $0.01 USDC on Base network
+---
 
-**Error Response:**
-```json
-{
-  "success": false,
-  "error": "Error message here"
-}
-```
+## 🔧 Troubleshooting
 
-## Project Structure
+### "Missing required environment variables"
+- Make sure you created `.env` (not just `.env.example`)
+- Check all required variables are filled in
+
+### "OPENROUTER_API_KEY is required"
+- Add your OpenRouter API key to `.env`
+- Get one at [openrouter.ai/keys](https://openrouter.ai/keys)
+
+### "401 from OpenRouter"
+- Check your API key is correct
+- Some keys need `OPENROUTER_HTTP_REFERER` header
+
+### "x402 payment not detected"
+- Ensure you're using an x402-capable client
+- Confirm ngrok URL matches your request
+- Verify wallet address is correct in `.env`
+
+---
+
+## 📚 Learn More
+
+- **x402 Protocol**: [x402.org](https://x402.org)
+- **OpenRouter Models**: [openrouter.ai/models](https://openrouter.ai/models)
+- **Coinbase Developer Platform**: [docs.cdp.coinbase.com](https://docs.cdp.coinbase.com)
+- **Non-Technical Walkthrough**: See `docs/non-technical-walkthrough.md`
+
+---
+
+## 📄 Project Structure
 
 ```
 x402-openrouter-starter/
-├─ src/
-│  ├─ server.ts        # Express server, x402 integration, /generate-text route
-│  └─ openrouter.ts    # Helper to call OpenRouter chat completions
-├─ scripts/
-│  └─ ngrok.sh         # Helper script to run ngrok tunnel
-├─ .env.example        # Template for environment variables
-├─ package.json        # Dependencies + scripts
-├─ tsconfig.json       # TypeScript compiler settings
-├─ .gitignore          # Ignore node_modules, dist, .env, etc.
-└─ README.md           # This file
+├── src/
+│   ├── prompt{edit}.ts   ← ✏️ EDIT THIS ON GITHUB
+│   ├── server.ts         ← Express server + x402
+│   └── openrouter.ts     ← AI generation logic
+├── docs/
+│   └── non-technical-walkthrough.md
+├── .env.example          ← Template for .env
+├── .env                  ← 🔐 YOUR SECRETS (create locally, never commit!)
+├── package.json
+└── README.md
 ```
 
-## File-by-file Purpose
+---
 
-### src/server.ts
-
-- Creates the Express app
-- Loads environment variables
-- Configures paymentMiddleware from x402-express with:
-  - Your payout address on Base (USDC)
-  - A price map saying "POST /generate-text costs $0.01 on Base"
-  - The Coinbase mainnet facilitator from @coinbase/x402
-- Defines the POST /generate-text route:
-  - Reads `{ prompt, model? }` from req.body
-  - Calls `generateText()` from openrouter.ts
-  - Returns JSON: `{ success, model, output }`
-- Starts listening on PORT (default 4021) on 0.0.0.0
-
-### src/openrouter.ts
-
-- Loads `OPENROUTER_API_KEY` and optional `OPENROUTER_MODEL` from .env
-- Defines an async function `generateText(prompt, model?)` that:
-  - POSTs to `https://openrouter.ai/api/v1/chat/completions`
-  - Uses standard Chat Completions schema: `messages: [{ role: "user", content: prompt }]`
-  - Returns `{ model, content, raw }`, where:
-    - `model` = actual model used
-    - `content` = first message content from the response
-    - `raw` = full raw JSON from OpenRouter (for debugging/extension)
-
-## Testing
-
-You can test the server using any HTTP client that supports x402 payments. Make sure to:
-
-1. Include the x402 payment headers in your request
-2. Send a valid payment for $0.01 USDC on Base
-3. Include the required `prompt` in the request body
-
-## License
+## 📝 License
 
 MIT
