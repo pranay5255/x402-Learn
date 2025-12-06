@@ -8,10 +8,31 @@ A beginner-friendly template for building paid AI API endpoints using x402 payme
 
 ## 🎯 What This Does
 
-- Creates a paid AI API that charges **$0.01 USDC** per request
+- Creates a paid AI API that charges **$0.001 USDC** per request
 - Payments are processed automatically via x402 protocol
-- You receive payments directly to your Base wallet
+- You receive payments directly to your Base (or Base Sepolia for testing) wallet
 - AI responses powered by your choice of models via OpenRouter
+- **Includes a frontend** for testing any x402 endpoint with wallet payments
+
+---
+
+## 🌐 Frontend Tester
+
+This repo includes a standalone frontend (`/frontend`) that lets you:
+- **Test any x402 endpoint** - Paste any ngrok URL
+- **Connect your wallet** - Coinbase Wallet, MetaMask, WalletConnect
+- **Make paid requests** - Complete x402 payment flow in browser
+- **Pay other users** - Test endpoints created by others on Base Sepolia
+
+### Deploy the Frontend
+
+```bash
+cd frontend
+pnpm install
+pnpm dev
+```
+
+Or deploy to Vercel/Netlify for a hosted version. See `/frontend/README.md` for details.
 
 ---
 
@@ -46,9 +67,9 @@ A beginner-friendly template for building paid AI API endpoints using x402 payme
 
 Before you start, you'll need:
 
-1. **Base Wallet Address** - Your Ethereum address on Base network to receive USDC payments
-2. **CDP API Keys** - From [Coinbase Developer Platform](https://docs.cdp.coinbase.com/)
-3. **OpenRouter API Key** - From [openrouter.ai/keys](https://openrouter.ai/keys)
+1. **Base or Base Sepolia Wallet Address** - Where payments settle
+2. **OpenRouter API Key** - From [openrouter.ai/keys](https://openrouter.ai/keys)
+3. *(Optional for mainnet)* **CDP API Keys** - From [Coinbase Developer Platform](https://docs.cdp.coinbase.com/)
 
 ### Step 2: Fork & Clone the Repository
 
@@ -60,26 +81,25 @@ cd x402-openrouter-starter
 
 ### Step 3: Create Your `.env` File (LOCAL ONLY - Never Commit!)
 
-```bash
-# Copy the example file
-cp .env.example .env
-```
-
-Edit `.env` and fill in your values:
+Create the file and paste the values:
 
 ```env
-# REQUIRED - Your Base wallet address
+# REQUIRED - Your Base or Base Sepolia wallet address
 ADDRESS=0xYourWalletAddressHere
-
-# REQUIRED - CDP API keys
-CDP_API_KEY_ID=your_cdp_key_id
-CDP_API_KEY_SECRET=your_cdp_key_secret
 
 # REQUIRED - OpenRouter API key
 OPENROUTER_API_KEY=your_openrouter_key
 
 # OPTIONAL - Choose your AI model
 OPENROUTER_MODEL=openai/gpt-4o-mini
+
+# OPTIONAL - Use mainnet facilitator (requires CDP keys)
+# X402_ENV=mainnet
+# CDP_API_KEY_ID=your_cdp_key_id
+# CDP_API_KEY_SECRET=your_cdp_key_secret
+
+# OPTIONAL - Override facilitator URL (defaults to https://x402.org/facilitator for testnet)
+# FACILITATOR_URL=https://x402.org/facilitator
 ```
 
 ### Step 4: Install & Run
@@ -157,7 +177,39 @@ export const GENERATION_SETTINGS = {
 
 ## 🧪 Testing Your API
 
-### Free Endpoints (no payment needed):
+### Option 1: Use the Frontend Tester (Recommended!)
+
+The easiest way to test your API with real payments:
+
+1. **Start your backend** with ngrok:
+   ```bash
+   # Terminal 1: Start server
+   pnpm dev
+   
+   # Terminal 2: Expose with ngrok
+   ngrok http 4021
+   ```
+
+2. **Start the frontend**:
+   ```bash
+   cd frontend
+   pnpm install
+   pnpm dev
+   ```
+
+3. **Open the frontend** at `http://localhost:5173`
+
+4. **Connect your wallet** (Coinbase Wallet, MetaMask, or WalletConnect)
+
+5. **Paste your ngrok URL** into the endpoint field
+
+6. Click **"Make Paid Request"** - the frontend will:
+   - Detect the 402 Payment Required response
+   - Show you the payment details
+   - Let you sign and send the payment
+   - Display the AI response
+
+### Option 2: Test Free Endpoints (no payment needed)
 
 ```bash
 # Check server status
@@ -167,13 +219,22 @@ curl http://localhost:4021/
 curl http://localhost:4021/config
 ```
 
-### Paid Endpoint ($0.01 USDC):
+### Option 3: Test via CLI with curl
 
 ```bash
-# Requires x402-capable client with payment
-curl -X POST https://YOUR-NGROK-URL/generate-text \
+# 1) Get the 402 paywall (no X-PAYMENT header yet)
+curl -i -X POST https://YOUR-NGROK-OR-LOCAL-URL/generate-text \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Write a haiku about coding"}'
+
+# 2) Use an x402-capable buyer client to pay and produce X-PAYMENT
+# See Coinbase buyer quickstart for how to construct the header:
+# https://docs.cdp.coinbase.com/x402/quickstart-for-buyers
+# Then re-run:
+# curl -X POST https://YOUR-NGROK-OR-LOCAL-URL/generate-text \
+#   -H "Content-Type: application/json" \
+#   -H "X-PAYMENT: <payment-payload-from-buyer-client>" \
+#   -d '{"prompt": "Write a haiku about coding"}'
 ```
 
 ---
@@ -209,7 +270,7 @@ Returns server status and available endpoints.
 
 Returns current prompt settings from `src/prompt{edit}.ts`.
 
-### `POST /generate-text` - Generate AI Text ($0.01 USDC)
+### `POST /generate-text` - Generate AI Text ($0.001 USDC)
 
 **Request:**
 ```json
@@ -270,7 +331,64 @@ x402-openrouter-starter/
 │   └── openrouter.ts     ← AI generation logic
 ├── docs/
 │   └── non-technical-walkthrough.md
-├── .env.example          ← Template for .env
+├── .env                  ← 🔐 YOUR SECRETS (create locally, never commit!)
+├── package.json
+└── README.md
+```
+
+---
+
+## 🤝 Sharing & Paying Other Users
+
+The beauty of x402 is that **anyone can test and pay for anyone else's API**:
+
+### Share Your Endpoint
+
+1. Deploy your backend with your custom prompts
+2. Run ngrok to get a public URL
+3. Share your ngrok URL with others
+
+### Test Someone Else's Endpoint
+
+1. Get testnet ETH from [Coinbase Faucet](https://www.coinbase.com/faucets/base-sepolia-faucet)
+2. Open the frontend tester
+3. Connect your wallet
+4. Paste their ngrok URL
+5. Make paid requests - your USDC goes to their wallet!
+
+### How Payments Flow
+
+```
+Your Wallet (Base Sepolia)
+        │
+        │ $0.001 USDC
+        ▼
+x402 Facilitator (x402.org)
+        │
+        │ Verified payment
+        ▼
+API Provider's Wallet
+```
+
+---
+
+## 📄 Project Structure
+
+```
+x402-openrouter-starter/
+├── src/
+│   ├── prompt{edit}.ts   ← ✏️ EDIT THIS ON GITHUB
+│   ├── server.ts         ← Express server + x402 + CORS
+│   └── openrouter.ts     ← AI generation logic
+├── frontend/             ← 🌐 STANDALONE FRONTEND
+│   ├── src/
+│   │   ├── components/   ← Wallet, Tester, Payment UI
+│   │   ├── App.tsx       ← Main app
+│   │   └── wagmi.ts      ← Wallet config
+│   ├── package.json
+│   └── README.md
+├── docs/
+│   └── non-technical-walkthrough.md
 ├── .env                  ← 🔐 YOUR SECRETS (create locally, never commit!)
 ├── package.json
 └── README.md
