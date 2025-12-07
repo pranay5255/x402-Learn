@@ -15,14 +15,24 @@ if (!OPENROUTER_API_KEY) {
   throw new Error("OPENROUTER_API_KEY environment variable is required");
 }
 
+interface OpenRouterContentPart {
+  [key: string]: unknown;
+  type?: string;
+  text?: string;
+  content?: string;
+}
+
 interface OpenRouterResponse {
   id: string;
   model: string;
   choices: Array<{
-    message: {
-      role: string;
-      content: string;
+    message?: {
+      role?: string;
+      // Some models (including Amazon Nova) return content as an array of blocks
+      content?: string | OpenRouterContentPart[];
     };
+    // Some providers return the text directly on the choice
+    content?: string;
   }>;
   usage?: {
     prompt_tokens: number;
@@ -86,9 +96,50 @@ export async function generateText(prompt: string, model?: string): Promise<Gene
     throw new Error("No choices returned from OpenRouter API");
   }
 
+  // Normalize model responses that return segmented content (e.g., Amazon Nova)
+  const extractContent = (choice: OpenRouterResponse["choices"][number]): string => {
+    // Direct string on choice
+    if (typeof choice.content === "string" && choice.content.trim()) {
+      return choice.content.trim();
+    }
+
+    const messageContent = choice.message?.content;
+
+    // Simple string content
+    if (typeof messageContent === "string" && messageContent.trim()) {
+      return messageContent.trim();
+    }
+
+    // Array of parts (text blocks, etc.)
+    if (Array.isArray(messageContent)) {
+      const text = messageContent
+        .map(part => {
+          if (typeof part === "string") return part;
+          if (part && typeof part === "object") {
+            if (typeof part.text === "string") return part.text;
+            if (typeof part.content === "string") return part.content;
+          }
+          return "";
+        })
+        .filter(Boolean)
+        .join("\n")
+        .trim();
+
+      if (text) return text;
+    }
+
+    return "";
+  };
+
+  const content = extractContent(data.choices[0]);
+
+  if (!content) {
+    throw new Error("Model returned an empty response");
+  }
+
   return {
     model: data.model,
-    content: data.choices[0].message.content,
+    content,
     raw: data,
   };
 }
