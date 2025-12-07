@@ -13,6 +13,7 @@ config();
 const payToAddress = process.env.ADDRESS as `0x${string}`;
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 4021;
 const useMainnetFacilitator = process.env.X402_ENV === "mainnet";
+const facilitatorUrl = process.env.FACILITATOR_URL || "https://x402.org/facilitator";
 
 // Validate required environment variables
 if (!payToAddress) {
@@ -85,9 +86,14 @@ type FacilitatorOption = Parameters<typeof paymentMiddleware>[2];
 const facilitatorConfig: FacilitatorOption = useMainnetFacilitator
   ? facilitator
   : {
-      url: (process.env.FACILITATOR_URL ||
-        "https://x402.org/facilitator") as `${string}://${string}`,
+      url: facilitatorUrl as `${string}://${string}`,
     };
+
+console.info("[server] payment config", {
+  payTo: `${payToAddress.slice(0, 6)}...${payToAddress.slice(-4)}`,
+  network: useMainnetFacilitator ? "base" : "base-sepolia",
+  facilitator: useMainnetFacilitator ? "coinbase-hosted" : facilitatorUrl,
+});
 
 app.use(
   paymentMiddleware(
@@ -128,6 +134,7 @@ app.use(
 // POST /generate-text route
 app.post("/generate-text", async (req, res) => {
   try {
+    const startedAt = Date.now();
     const { prompt, model } = req.body;
 
     if (!prompt || typeof prompt !== "string") {
@@ -137,7 +144,19 @@ app.post("/generate-text", async (req, res) => {
       });
     }
 
+    console.info("[server] /generate-text request", {
+      promptLength: prompt.length,
+      promptPreview: prompt.slice(0, 80),
+      modelOverride: model,
+    });
+
     const result = await generateText(prompt, model);
+
+    console.info("[server] /generate-text response", {
+      model: result.model,
+      outputPreview: result.content.slice(0, 80),
+      elapsedMs: Date.now() - startedAt,
+    });
 
     return res.json({
       success: true,
