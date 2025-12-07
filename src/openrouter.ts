@@ -4,6 +4,9 @@ import {
   DEFAULT_USER_PROMPT,
   MODEL_OVERRIDE,
   GENERATION_SETTINGS,
+  EXAMPLE_PROMPTS,
+  AGENT_PROFILE,
+  AGENT_EXAMPLES,
 } from "./prompt{edit}";
 
 config();
@@ -174,9 +177,14 @@ export async function generateText(prompt: string, model?: string): Promise<Gene
  */
 export function getPromptConfig() {
   return {
+    agent: AGENT_PROFILE,
     systemPrompt: SYSTEM_PROMPT,
     defaultUserPrompt: DEFAULT_USER_PROMPT,
     model: OPENROUTER_MODEL,
     settings: GENERATION_SETTINGS,
+    examples: {
+      prompts: EXAMPLE_PROMPTS,
+      guided: AGENT_EXAMPLES,
+    },
   };
 }

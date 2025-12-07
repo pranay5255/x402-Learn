@@ -65,13 +65,17 @@ app.get("/config", (_req, res) => {
   const promptConfig = getPromptConfig();
   res.json({
     message: "Current prompt configuration (from src/prompt{edit}.ts)",
-    config: {
-      systemPrompt: promptConfig.systemPrompt,
-      defaultUserPrompt: promptConfig.defaultUserPrompt,
-      model: promptConfig.model,
+    agent: promptConfig.agent,
+    prompts: {
+      system: promptConfig.systemPrompt,
+      defaultUser: promptConfig.defaultUserPrompt,
+    },
+    model: promptConfig.model,
+    generation: {
       temperature: promptConfig.settings.temperature,
       maxTokens: promptConfig.settings.max_tokens,
     },
+    examples: promptConfig.examples,
     editInstructions: "Edit src/prompt{edit}.ts on GitHub to customize these settings!",
   });
 });
