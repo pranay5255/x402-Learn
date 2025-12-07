@@ -57,91 +57,113 @@ interface GenerateTextResult {
 export async function generateText(prompt: string, model?: string): Promise<GenerateTextResult> {
   const selectedModel = model || OPENROUTER_MODEL;
   const userPrompt = prompt || DEFAULT_USER_PROMPT;
+  const startedAt = Date.now();
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-      "HTTP-Referer": process.env.OPENROUTER_HTTP_REFERER || "",
-      "X-Title": process.env.OPENROUTER_X_TITLE || "",
-    },
-    body: JSON.stringify({
-      model: selectedModel,
-      messages: [
-        {
-          role: "system",
-          content: SYSTEM_PROMPT,
-        },
-        {
-          role: "user",
-          content: userPrompt,
-        },
-      ],
-      temperature: GENERATION_SETTINGS.temperature,
-      max_tokens: GENERATION_SETTINGS.max_tokens,
-    }),
+  console.info("[openrouter] request", {
+    model: selectedModel,
+    promptLength: userPrompt.length,
+    hasOverride: Boolean(model),
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`,
-    );
-  }
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        "HTTP-Referer": process.env.OPENROUTER_HTTP_REFERER || "",
+        "X-Title": process.env.OPENROUTER_X_TITLE || "",
+      },
+      body: JSON.stringify({
+        model: selectedModel,
+        messages: [
+          {
+            role: "system",
+            content: SYSTEM_PROMPT,
+          },
+          {
+            role: "user",
+            content: userPrompt,
+          },
+        ],
+        temperature: GENERATION_SETTINGS.temperature,
+        max_tokens: GENERATION_SETTINGS.max_tokens,
+      }),
+    });
 
-  const data: OpenRouterResponse = await response.json();
-
-  if (!data.choices || data.choices.length === 0) {
-    throw new Error("No choices returned from OpenRouter API");
-  }
-
-  // Normalize model responses that return segmented content (e.g., Amazon Nova)
-  const extractContent = (choice: OpenRouterResponse["choices"][number]): string => {
-    // Direct string on choice
-    if (typeof choice.content === "string" && choice.content.trim()) {
-      return choice.content.trim();
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `OpenRouter API error: ${response.status} ${response.statusText} - ${errorText}`,
+      );
     }
 
-    const messageContent = choice.message?.content;
+    const data: OpenRouterResponse = await response.json();
 
-    // Simple string content
-    if (typeof messageContent === "string" && messageContent.trim()) {
-      return messageContent.trim();
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error("No choices returned from OpenRouter API");
     }
 
-    // Array of parts (text blocks, etc.)
-    if (Array.isArray(messageContent)) {
-      const text = messageContent
-        .map(part => {
-          if (typeof part === "string") return part;
-          if (part && typeof part === "object") {
-            if (typeof part.text === "string") return part.text;
-            if (typeof part.content === "string") return part.content;
-          }
-          return "";
-        })
-        .filter(Boolean)
-        .join("\n")
-        .trim();
+    // Normalize model responses that return segmented content (e.g., Amazon Nova)
+    const extractContent = (choice: OpenRouterResponse["choices"][number]): string => {
+      // Direct string on choice
+      if (typeof choice.content === "string" && choice.content.trim()) {
+        return choice.content.trim();
+      }
 
-      if (text) return text;
+      const messageContent = choice.message?.content;
+
+      // Simple string content
+      if (typeof messageContent === "string" && messageContent.trim()) {
+        return messageContent.trim();
+      }
+
+      // Array of parts (text blocks, etc.)
+      if (Array.isArray(messageContent)) {
+        const text = messageContent
+          .map(part => {
+            if (typeof part === "string") return part;
+            if (part && typeof part === "object") {
+              if (typeof part.text === "string") return part.text;
+              if (typeof part.content === "string") return part.content;
+            }
+            return "";
+          })
+          .filter(Boolean)
+          .join("\n")
+          .trim();
+
+        if (text) return text;
+      }
+
+      return "";
+    };
+
+    const content = extractContent(data.choices[0]);
+
+    if (!content) {
+      throw new Error("Model returned an empty response");
     }
 
-    return "";
-  };
+    console.info("[openrouter] response", {
+      model: data.model,
+      contentPreview: content.slice(0, 80),
+      elapsedMs: Date.now() - startedAt,
+    });
 
-  const content = extractContent(data.choices[0]);
-
-  if (!content) {
-    throw new Error("Model returned an empty response");
+    return {
+      model: data.model,
+      content,
+      raw: data,
+    };
+  } catch (error) {
+    console.error("[openrouter] error", {
+      model: selectedModel,
+      elapsedMs: Date.now() - startedAt,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
   }
-
-  return {
-    model: data.model,
-    content,
-    raw: data,
-  };
 }
 
 /**
