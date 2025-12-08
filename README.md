@@ -4,7 +4,7 @@
 
 Accept USDC cryptocurrency payments on Base network and generate AI responses with OpenRouter — all in one seamless flow.
 
-**Perfect for both technical and non-technical users!**
+**Perfect for both technical and non-technical users! No local setup required — runs entirely in your browser via GitHub Codespaces.**
 
 ---
 
@@ -36,7 +36,7 @@ All automatic! 🎉
 | `src/prompt{edit}.ts` | **Your main editing file!** Customize AI personality, prompts, and settings |
 | `README.md` | This documentation |
 
-### 🔐 Files You CREATE LOCALLY (⚠️ never commit!)
+### 🔐 Files You CREATE in Codespace (⚠️ never commit!)
 
 | File | Purpose |
 |------|---------|
@@ -52,35 +52,51 @@ All automatic! 🎉
 
 ---
 
-## 🛠️ Setup Guide
+## 🛠️ Setup Guide (GitHub Codespaces)
+
+**Everything runs in your browser — no local installation needed!**
 
 ### 📋 Prerequisites
 
-Before starting, you'll need:
+Before starting, gather these credentials and keep them in a notepad:
 
 | Item | Where to Get It |
 |------|-----------------|
-| Base wallet address | Any Ethereum wallet (MetaMask, Coinbase Wallet) |
+| GitHub account | [github.com](https://github.com) (you probably have this!) |
+| Base wallet address | Any Ethereum wallet (MetaMask, Coinbase Wallet, etc.) |
 | OpenRouter API key | [openrouter.ai/keys](https://openrouter.ai/keys) |
 
-💡 **Tip**: Keep these in a notepad — you'll paste them later!
+---
+
+### Step 1: Fork the Repository
+
+1. Click the **Fork** button at the top-right of this repository
+2. This creates your own copy that you can customize
 
 ---
 
-### Step 1: Clone the Repository
+### Step 2: Launch GitHub Codespace
 
-```bash
-git clone https://github.com/your-username/x402-openrouter-starter.git
-cd x402-openrouter-starter
-```
+1. Go to **your forked repository**
+2. Click the green **Code** button
+3. Select the **Codespaces** tab
+4. Click **Create codespace on main**
+
+⏳ Wait ~30 seconds for your browser-based development environment to start.
+
+> 💡 **What is Codespaces?** It's a complete development environment running in your browser — like having VS Code in a tab!
 
 ---
 
-### Step 2: Create Your `.env` File
+### Step 3: Create Your `.env` File
 
-> ⚠️ **Important**: This file contains secrets. Never commit it to GitHub!
+> ⚠️ **Important**: This file contains secrets. It stays in your Codespace only — never commit it!
 
-Create a `.env` file in the root directory:
+In the Codespace file explorer (left sidebar):
+
+1. Right-click in the file list → **New File**
+2. Name it: `.env`
+3. Paste the following and fill in YOUR values:
 
 ```env
 # REQUIRED - Your Base or Base Sepolia wallet address
@@ -94,16 +110,42 @@ OPENROUTER_MODEL=openai/gpt-4o-mini
 ```
 
 **Where to get these values:**
-- **ADDRESS**: Your Ethereum wallet address (from MetaMask, Coinbase Wallet, etc.)
-- **OPENROUTER_API_KEY**: Sign up at [openrouter.ai](https://openrouter.ai) and create an API key
-- **OPENROUTER_MODEL**: Browse [available models](https://openrouter.ai/models) and pick one
+
+| Variable | How to Get It |
+|----------|---------------|
+| `ADDRESS` | Open MetaMask or your wallet → Copy your wallet address (starts with `0x...`) |
+| `OPENROUTER_API_KEY` | Go to [openrouter.ai/keys](https://openrouter.ai/keys) → Sign up → Create new key → Copy it |
+| `OPENROUTER_MODEL` | Browse [openrouter.ai/models](https://openrouter.ai/models) → Pick a model name (e.g., `openai/gpt-4o-mini`) |
+
+4. Save the file (`Ctrl+S` or `Cmd+S`)
 
 ---
 
-### Step 3: Install & Run
+### Step 4: Install ngrok
+
+ngrok creates a public URL so others can access your API and pay you.
+
+In the Codespace terminal (bottom of screen), run:
 
 ```bash
-# Install dependencies
+curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+  | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
+  && echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
+  | sudo tee /etc/apt/sources.list.d/ngrok.list \
+  && sudo apt update \
+  && sudo apt install ngrok
+```
+
+✅ You should see ngrok being installed.
+
+---
+
+### Step 5: Install Dependencies & Start Server
+
+In the same terminal, run:
+
+```bash
+# Install project dependencies
 pnpm install
 
 # Start the server
@@ -119,63 +161,51 @@ pnpm dev
 Server URL: http://0.0.0.0:4021
 ```
 
-✅ Your server is running locally!
+✅ Your server is running!
 
 ---
 
-### Step 4: Expose with ngrok (for public access)
+### Step 6: Start ngrok (Get Public URL)
 
-To receive payments, your server needs a public URL. Open a **new terminal**:
+Open a **new terminal** tab:
+- Click the **+** icon in the terminal panel, or
+- Press `` Ctrl+Shift+` ``
+
+In the new terminal, run:
 
 ```bash
-# If ngrok is installed
 ngrok http 4021
-
-# Or use the built-in script
-pnpm ngrok
 ```
 
-**Copy your public URL** — it looks like:
+**You'll see something like:**
+
 ```
-https://abc-123-xyz.ngrok-free.app
+Session Status                online
+Forwarding                    https://abc-123-xyz.ngrok-free.app -> http://localhost:4021
 ```
 
-🌐 This is your public API address that others can pay to use!
+📋 **Copy your public URL** (the `https://...ngrok-free.app` one)
+
+🎉 **That's it!** This is your public API address that others can pay to use!
 
 ---
 
-## 🌐 Browser-Only Setup (GitHub Codespaces)
+### Step 7: Test Your API
 
-**No local IDE? No problem!** Run everything from your browser.
+Open a browser tab and visit your ngrok URL:
 
-### Quick Start
-
-1. **Open Web Editor**: Go to your repo and press `.` (period key)
-2. **Create Codespace**: Click `Code → Codespaces → Create codespace`
-3. **In the Terminal**:
-
-```bash
-# Create your secrets file
-cp .env.example .env
-# Edit .env with your keys using the editor
-
-# Install and run
-pnpm install
-pnpm dev
+```
+https://YOUR-NGROK-URL/
 ```
 
-4. **Install ngrok** (run this in terminal):
+You should see a JSON response with your server status!
 
-```bash
-curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
-  | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
-  && echo "deb https://ngrok-agent.s3.amazonaws.com bookworm main" \
-  | sudo tee /etc/apt/sources.list.d/ngrok.list \
-  && sudo apt update \
-  && sudo apt install ngrok
+Try also:
+```
+https://YOUR-NGROK-URL/config
 ```
 
-5. **Start ngrok** in another terminal: `ngrok http 4021`
+This shows your current AI settings! ⚙️
 
 ---
 
@@ -183,9 +213,17 @@ curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
 
 The magic happens in **`src/prompt{edit}.ts`** — edit it to change your AI's personality!
 
+### How to Edit
+
+1. In Codespace, click `src/prompt{edit}.ts` in the file explorer
+2. Edit the values in quotes
+3. Save (`Ctrl+S` or `Cmd+S`)
+4. Restart the server: press `Ctrl+C` in the server terminal, then run `pnpm dev` again
+
 ### What You Can Customize
 
 **System Prompt** (AI's personality):
+
 ```typescript
 export const SYSTEM_PROMPT = `You are a friendly pirate AI!
 You speak in pirate slang and love to say "Arrr!"
@@ -193,11 +231,13 @@ Help users with their questions, matey!`;
 ```
 
 **Default Response**:
+
 ```typescript
 export const DEFAULT_USER_PROMPT = `Ahoy! What treasure can I help ye find today?`;
 ```
 
 **Example Prompts**:
+
 ```typescript
 export const EXAMPLE_PROMPTS = [
   "Tell me a pirate joke!",
@@ -206,11 +246,13 @@ export const EXAMPLE_PROMPTS = [
 ```
 
 **Model Override** (change the AI model):
+
 ```typescript
 export const MODEL_OVERRIDE = "anthropic/claude-3-haiku";
 ```
 
 **Creativity Settings**:
+
 ```typescript
 export const GENERATION_SETTINGS = {
   temperature: 0.9,  // Higher = more creative (0.0 - 1.0)
@@ -235,6 +277,7 @@ Returns current prompt settings from `src/prompt{edit}.ts`.
 ### `POST /generate-text` — Generate AI Text (💰 $0.001 USDC)
 
 **Request:**
+
 ```json
 {
   "prompt": "Your question or request",
@@ -243,6 +286,7 @@ Returns current prompt settings from `src/prompt{edit}.ts`.
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -261,6 +305,8 @@ Returns current prompt settings from `src/prompt{edit}.ts`.
 | "OPENROUTER_API_KEY required" | Check your API key is correctly set in `.env` |
 | "Server not responding" | Ensure `pnpm dev` is still running in the terminal |
 | Changes not showing | Restart the server after editing files |
+| ngrok URL not working | Make sure `ngrok http 4021` is running in a separate terminal |
+| Codespace terminal not visible | Click **Terminal** in the top menu → **New Terminal** |
 
 ---
 
@@ -281,7 +327,7 @@ x402-openrouter-starter/
 │   └── README.md
 ├── docs/
 │   └── non-technical-walkthrough.md
-├── .env                  ← 🔐 YOUR SECRETS (never commit!)
+├── .env                  ← 🔐 YOUR SECRETS (create in Codespace, never commit!)
 ├── package.json
 └── README.md
 ```
@@ -295,8 +341,9 @@ x402-openrouter-starter/
 | **x402** | Payment protocol that charges per API call automatically |
 | **USDC** | Stablecoin (1 USDC = $1) on Base network |
 | **OpenRouter** | Service that connects to multiple AI models (GPT-4, Claude, etc.) |
-| **ngrok** | Makes your local server publicly accessible |
+| **ngrok** | Makes your Codespace server publicly accessible |
 | **Base** | Ethereum L2 network with low transaction fees |
+| **Codespaces** | GitHub's browser-based development environment |
 
 ---
 
