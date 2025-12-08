@@ -190,25 +190,6 @@ Forwarding                    https://abc-123-xyz.ngrok-free.app -> http://local
 
 ---
 
-### Step 7: Test Your API
-
-Open a browser tab and visit your ngrok URL:
-
-```
-https://YOUR-NGROK-URL/
-```
-
-You should see a JSON response with your server status!
-
-Try also:
-```
-https://YOUR-NGROK-URL/config
-```
-
-This shows your current AI settings! ⚙️
-
----
-
 ## ✏️ Customizing Your AI
 
 The magic happens in **`src/prompt{edit}.ts`** — edit it to change your AI's personality!
@@ -262,90 +243,6 @@ export const GENERATION_SETTINGS = {
 
 > 💡 After editing, restart the server (`Ctrl+C` then `pnpm dev`) to see changes.
 
----
-
-## 📊 API Reference
-
-### `GET /` — Server Info (Free)
-
-Returns server status and available endpoints.
-
-### `GET /config` — View Configuration (Free)
-
-Returns current prompt settings from `src/prompt{edit}.ts`.
-
-### `POST /generate-text` — Generate AI Text (💰 $0.001 USDC)
-
-**Request:**
-
-```json
-{
-  "prompt": "Your question or request",
-  "model": "openai/gpt-4o-mini"
-}
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "model": "openai/gpt-4o-mini",
-  "output": "AI generated response..."
-}
-```
-
----
-
-## 🚨 Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| "Missing environment variables" | Make sure `.env` exists and has all values filled in |
-| "OPENROUTER_API_KEY required" | Check your API key is correctly set in `.env` |
-| "Server not responding" | Ensure `pnpm dev` is still running in the terminal |
-| Changes not showing | Restart the server after editing files |
-| ngrok URL not working | Make sure `ngrok http 4021` is running in a separate terminal |
-| Codespace terminal not visible | Click **Terminal** in the top menu → **New Terminal** |
-
----
-
-## 📄 Project Structure
-
-```
-x402-openrouter-starter/
-├── src/
-│   ├── prompt{edit}.ts   ← ✏️ EDIT THIS (customize AI)
-│   ├── server.ts         ← Express server + x402 + CORS
-│   └── openrouter.ts     ← AI generation logic
-├── frontend/             ← 🌐 STANDALONE FRONTEND
-│   ├── src/
-│   │   ├── components/   ← Wallet, Tester, Payment UI
-│   │   ├── App.tsx       ← Main app
-│   │   └── wagmi.ts      ← Wallet config
-│   ├── package.json
-│   └── README.md
-├── docs/
-│   └── non-technical-walkthrough.md
-├── .env                  ← 🔐 YOUR SECRETS (create in Codespace, never commit!)
-├── package.json
-└── README.md
-```
-
----
-
-## 🎓 Key Concepts
-
-| Concept | What It Does |
-|---------|--------------|
-| **x402** | Payment protocol that charges per API call automatically |
-| **USDC** | Stablecoin (1 USDC = $1) on Base network |
-| **OpenRouter** | Service that connects to multiple AI models (GPT-4, Claude, etc.) |
-| **ngrok** | Makes your Codespace server publicly accessible |
-| **Base** | Ethereum L2 network with low transaction fees |
-| **Codespaces** | GitHub's browser-based development environment |
-
----
 
 ## 📚 Resources
 
