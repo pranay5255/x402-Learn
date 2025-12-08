@@ -1,4 +1,4 @@
-# x402-openrouter-starter
+# x402-openrouter-ngrok-starter
 
 > 🚀 A beginner-friendly template for building **paid AI API endpoints** using the x402 payment protocol.
 
